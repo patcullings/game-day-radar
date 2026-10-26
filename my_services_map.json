@@ -1,0 +1,112 @@
+{
+  "_comment": "This is a reference copy of the matching rules baked into worker.js (see SERVICES and matchServices()). Editing this file alone does NOT change behavior — it's documentation of the logic. Update worker.js if you change the rules.",
+
+  "Antenna": {
+    "matches_exact": ["ABC", "CBS", "NBC", "FOX", "CW", "ION"],
+    "note": "Only matches when the broadcast name IS the bare network (e.g. 'CBS'). Does NOT match 'CBS via Paramount+' or similar bundled strings.",
+    "local_channels": {
+      "ABC": {"station": "KIVI 6", "network": "ABC"},
+      "CBS": {"station": "KBOI 2", "network": "CBS", "warning": "ESPN does not identify Boise's regional CBS game; the card labels this option as unconfirmed."},
+      "NBC": {"station": "KTVB 7", "network": "NBC"},
+      "FOX": {"station": "KNIN 9", "network": "Fox"},
+      "CW": {"station": "CW Boise", "network": "CW"},
+      "ION": {"station": "ION Boise", "network": "ION"}
+    }
+  },
+
+  "Paramount+": {
+    "matches_contains": ["paramount+"],
+    "excludes_if_contains": ["showtime"],
+    "note": "Matches any broadcast string containing 'Paramount+' (Champions League, NWSL, some NFL simulcasts) UNLESS it also mentions Showtime, which is not part of the Essential/Basic plan. Plain 'CBS' does NOT count as Paramount+ — see Antenna."
+  },
+
+  "Peacock": {
+    "matches_contains": ["peacock"],
+    "note": "Covers Peacock-exclusive and Peacock/NBC simulcast windows: Premier League, Big Ten, Sunday Night Football simulcast, WNBA on Peacock, some NBA."
+  },
+
+  "Prime Video": {
+    "matches_contains": ["prime video", "amazon"],
+    "matches_exact": ["Prime"],
+    "matches_local_teams": ["Seattle Kraken"],
+    "note": "National/general Prime Video labels match normally. 'Prime Video (Local)' only matches configured home teams whose local stream is confirmed available in the user's region. Dallas Stars home-market broadcasts are excluded; Seattle Kraken is included based on user confirmation."
+  },
+
+  "MLB.TV": {
+    "matches_contains": ["mlb.tv"],
+    "case_insensitive": true,
+    "default_enabled": true,
+    "note": "Only matches broadcasts ESPN explicitly labels MLB.TV. Availability may be affected by MLB.TV subscription requirements and blackout restrictions."
+  },
+
+  "YouTube": {
+    "matches_contains": ["youtube"],
+    "note": "Free live streams only (e.g. MLB free game of the week when explicitly broadcast as YouTube). No YouTube TV / cable channels."
+  },
+
+  "Apple TV": {
+    "matches_exact": ["Apple TV"],
+    "case_insensitive": true,
+    "default_enabled": true,
+    "note": "Matches the exact ESPN broadcast string observed for an MLS game. No separate 'MLS Season Pass' string was observed; the feed does not confirm which Apple subscription tier grants access."
+  },
+
+  "Tubi": {
+    "matches_contains": ["tubi"],
+    "case_insensitive": true,
+    "default_enabled": true,
+    "note": "Free service filter; it only matches when ESPN explicitly includes Tubi in a broadcast name. No Tubi labels were found in recent MLB/NHL samples."
+  },
+
+  "_toggle_behavior": {
+    "default": "All services are enabled unless a browser-local preference says otherwise.",
+    "persistence": "Enabled service IDs are stored in localStorage; if browser storage is unavailable, toggles still work until the page is closed.",
+    "recompute": "The browser recomputes game buckets immediately after a toggle and every 60 seconds. ESPN data is fetched every 10 minutes.",
+    "api": "The existing buckets are computed with all services enabled. The games array includes every non-finished game today, plus finished Boise State games so they remain pinned; scores includes all events today, including finished games. No toggle state is stored on the server."
+  },
+
+  "_favorites_and_scores": {
+    "scores_view": "Groups every event on the current Boise-local date by sport, including finished scores, live events, and future starts. It does not depend on which services are enabled.",
+    "favorite_teams": ["Arizona Cardinals", "Boise State Broncos", "AC Boise", "Athletic Club Boise", "Idaho Steelheads", "Boise Hawks"],
+    "configuration": "Use the star button beside a team in either dashboard view to add or remove it. Changes are saved in browser-local storage; these teams are defaults before the first saved preference."
+  },
+
+  "_not_watchable_details": {
+    "display": "Games with no enabled service show the distinct broadcast/network names ESPN listed, even if the service is not one the user owns.",
+    "caveat": "A listed broadcast is informational only and does not mean the user can access it. If ESPN supplies no broadcast names, the dashboard says so."
+  },
+
+  "_wwe_nxt": {
+    "schedule": "The CW's official schedule lists WWE NXT Tuesday, October 27, 2026, from 8-10 PM ET; the official show page also lists the October 20 episode. The worker adds a recurring Tuesday 8 PM ET scheduled-show entry with the CW antenna match.",
+    "limitation": "This is a schedule reminder, not match-card, live-score, or result coverage."
+  },
+
+  "_sports_scope": {
+    "included": ["F1 sessions", "Men's College Basketball", "Women's College Basketball", "Men's College Volleyball", "Women's College Volleyball"],
+    "policy": "The worker uses a curated ESPN scoreboard league allowlist rather than discovering every ESPN sport; unrelated sports such as motocross are not included automatically.",
+    "volleyball": "ESPN's men's and women's college-volleyball scoreboard endpoints are included; other volleyball leagues are not included.",
+    "wrestling": "TheSportsDB's Fighting events calendar returned wrestling events (including AEW, NJPW, and RevPro), but the sampled events did not include TV/broadcast data. It is not currently used because reliable service matching would not be possible."
+  },
+
+  "_track_and_field": {
+    "note": "ESPN track-and-field scoreboard routes tested returned HTTP 400. TheSportsDB's Athletics daily calendar returned no events on the date checked, so no reliable feed has been verified or added."
+  },
+
+  "_local_idaho_sports": {
+    "boise_state": "Existing ESPN feeds cover football (groups=80 FBS query), men's and women's basketball, and women's college volleyball. Boise State was not found in the tested men's college-volleyball feed. Soccer, beach volleyball, and track-and-field scoreboard routes were not usable.",
+    "athletic_club_boise": "TheSportsDB has an AC Boise team record, but the upcoming-events endpoint checked returned no events. No schedule feed is integrated.",
+    "idaho_steelheads": "TheSportsDB has a team record and next-events endpoint, but it returned rate limiting during verification. No dependable feed is integrated.",
+    "boise_hawks": "No team record was found in the TheSportsDB search, and no verified schedule feed is integrated.",
+    "favorite_behavior": "These team names are included in the default favorites so their cards will be highlighted if they appear in an integrated feed. Favorites do not create schedule data."
+  },
+
+  "_fgc_tournaments": {
+    "source": "Optional start.gg GraphQL API integration; requires a user-created API token stored in local .dev.vars as STARTGG_API_TOKEN (or as a Cloudflare Worker secret when deployed).",
+    "coverage": "Looks for tournaments in the next 7 days and includes recognized Smash and fighting-game events with a start.gg tournament link. Both views offer All, Smash, Other FGC, and Streams only filters; filters persist in local storage. Events are grouped by Boise-local Today, Tomorrow, and collapsed later-this-week groups. Displays tournament-level stream names/platforms if supplied.",
+    "limitations": "Depends on organizer listings; start.gg does not provide a reliable live/on-air state or match-score feed. An event within its schedule window is not confirmed live. Stream names/platforms are separate from TV-service matching/toggle rules and do not guarantee the stream is live or available. If the token is missing or the API is unavailable, ESPN dashboard data remains available."
+  },
+
+  "_local_cbs": {
+    "note": "ESPN reports CBS NFL broadcasts as national and does not identify Boise affiliate KBOI's regional game. 506 Sports listings show regional assignments in map images without a structured market-to-game mapping, so CBS network matches are not proof the game is available locally."
+  }
+}

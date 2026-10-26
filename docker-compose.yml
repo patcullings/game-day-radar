@@ -1,0 +1,13 @@
+services:
+  sports-dashboard:
+    build: .
+    working_dir: /app
+    ports:
+      - "8787:8787"
+    volumes:
+      - .:/app
+      - wrangler-npm-cache:/root/.npm
+    restart: unless-stopped
+
+volumes:
+  wrangler-npm-cache:
